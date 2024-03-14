@@ -1,0 +1,60 @@
+version: '3.7'
+services:
+  gitlab-web:
+    image: gitlab/gitlab-ee:16.9.2-ee.0
+    container_name: gitlab
+    restart: always
+    hostname: gitlab-web
+    environment:
+      HTTPS_EXPOSE: 80:80
+      HTTP_EXPOSE: 80:80
+      VIRTUAL_HOST: gitlab
+      GITLAB_OMNIBUS_CONFIG: |
+        # Add any other gitlab.rb configuration here, each on its own line
+        external_url 'https://gitlab.ddev.site'
+        # nginx['redirect_http_to_https'] = false
+        # nginx['listen_https'] = false
+        gitlab_rails['omniauth_allow_single_sign_on'] = ['oauth2_generic']
+        gitlab_rails['omniauth_auto_link_ldap_user'] = true
+        gitlab_rails['omniauth_block_auto_created_users'] = true
+    external_links:
+        - ddev-router:gitlab.ddev.site
+        - ddev-router:accounts.ddev.site
+    extra_hosts:
+        - host.docker.internal=172.30.96.1
+    volumes:
+      - '$GITLAB_HOME/config:/etc/gitlab'
+      - '$GITLAB_HOME/logs:/var/log/gitlab'
+      - '$GITLAB_HOME/data:/var/opt/gitlab'
+    expose:
+      - '80'
+    # labels:
+    #    - traefik.enable=true
+    #    - traefik.http.routers.gitlab-web-80-http.rule=HostRegexp(`gitlab.ddev.site`)
+    #    - traefik.http.routers.gitlab-web-80-http.middlewares=autodetect
+    #    - traefik.http.routers.gitlab-web-80-http.entrypoints=http-80
+    #    - traefik.http.routers.gitlab-web-80-http.tls=false
+    #    - traefik.http.routers.gitlab-web-80-http.service=gitlab-web-80-http
+    shm_size: '256m'
+    networks:
+      - ddev_default
+    ports:
+      - host_ip: 127.0.0.1
+        mode: ingress
+        protocol: tcp
+        target: 80
+        published: 54321
+      # - host_ip: 127.0.0.1
+      #   mode: ingress
+      #   protocol: tcp
+      #   target: 443
+      #   published: 443
+
+networks:
+  ddev_default:
+    name: ddev_default
+    external: true
+# volumes:
+#   ddev-global-cache:
+#       external: true
+#       name: ddev-global-cache
