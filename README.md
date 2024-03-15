@@ -19,27 +19,79 @@ authorization_endpoint: "https://oauth.ddev.site/oauth/authorize",
 token_endpoint: "https://oauth.ddev.site/oauth/token"
 ```
 
+Inside the .ddev folder in `/oauth` we find the `docker-compose.external_links.yaml` to let ddev_router know about the second DDEV project.
 
-So far, there are 3 approaches:
 
-Approach 1
+
+The second DDEV project (gitlab) located in the folder `gitlab` contains inside its .ddev folder a `docker-compose.override.yaml` that will create a gitlab instance with the following GITLAB_OMNIBUS_CONFIG (probably partially wrong):
+
+```
+external_url 'https://gitlab.ddev.site'
+nginx['redirect_http_to_https'] = false
+letsencrypt['enable'] = false
+nginx['listen_port'] = 80
+nginx['listen_https'] = false
+nginx['ssl_verify_client'] = "off"
+gitlab_rails['omniauth_allow_single_sign_on'] = ['openid_connect']
+gitlab_rails['omniauth_auto_link_ldap_user'] = true
+gitlab_rails['omniauth_block_auto_created_users'] = true
+nginx['ssl_certificate'] = "/etc/gitlab/ssl/gitlab.ddev.site.crt"
+nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/gitlab.ddev.site.key"
+```
+and the rest of the services configured (maybe some are wrong or not needed).
+
+in addition, and before doing `ddev start`, you might need to create the gitlab folder: `sudo mkdir -p /srv/gitlab` as per (https://docs.gitlab.com/ee/install/docker.html#set-up-the-volumes-location). We dont use the environment variable $GITLAB_HOME inside the docker-compose image.
+
+
+The `gitlab.rb` config used (file located in `/srv/gitlab/config/gitlab.rb or /etc/gitlab/gitlab.rb inside the container) is:
+```
+external_url 'https://gitlab.ddev.site'
+nginx['redirect_http_to_https'] = false
+letsencrypt['enable'] = false
+nginx['listen_port'] = 80
+nginx['listen_https'] = false
+nginx['ssl_verify_client'] = "off"
+nginx['ssl_client_certificate'] = "/etc/gitlab/ssl/ca.crt"
+gitlab_rails['omniauth_allow_single_sign_on'] = ['openid_connect']
+gitlab_rails['omniauth_auto_link_ldap_user'] = true
+gitlab_rails['omniauth_block_auto_created_users'] = true
+nginx['ssl_certificate'] = "/mnt/ddev_config/traefik/certs/gitlab.crt"
+nginx['ssl_certificate_key'] = "/mnt/ddev_config/traefik/certs/gitlab.key"
+gitlab_rails['omniauth_providers'] = [
+  {
+    name: "openid_connect",
+    label: "OIC",
+    args: {
+      name: 'openid_connect',
+      scope: ['oauth2_access_to_profile_information'],
+      response_type: 'code',
+      issuer: 'https://oauth.ddev.site',
+      discovery: false,
+      client_auth_method: 'basic',
+      uid_field: "preferred_username",
+      client_options: {
+        identifier: 'gitlab',
+        secret: 'gitlab',
+        redirect_uri: 'https://gitlab.ddev.site/users/auth/openid_connect/callback',
+        userinfo_endpoint: "https://oauth.ddev.site/oauth/v1/userinfo",
+        authorization_endpoint: "https://oauth.ddev.site/oauth/authorize",
+        token_endpoint: "https://oauth.ddev.site/oauth/token"
+      }
+    }
+  }
+]
+```
+
+
+With everything, the error gotten is 
+`Could not authenticate you from OpenIDConnect because "Ssl connect returned=1 errno=0 peeraddr=192.168.160.5:443 state=error: certificate verify failed (unable to get local issuer certificate)". ` 
+
+after clicking in the "OIC" button for login, being redirected to the OAUTH platform, login and granting the client and redirected back to gitlab.
+
+
+
+Variation 1
 ---
-a docker-compose file loaded with `docker compose up` that have the gitlab instance in https://gitlab.ddev.site:port.
-Combined with the ddev-router provided by a DDEV project (D10) that was also lifted via ddev start, as DDEV can handle urls via its traefik.
-This could work IF i manage to have the port removed from the url, but i dont know how so far
 
-
-Approach 2
----
-All together in a DDEV project, but i did not manage to have the web service of ddev pointing to one url and the gitlab service pointing to a different one.
-A single ddev start could lift both web and gitlab, but same url is created for both and i don't know how to add a second url for the second service.
-
-
-Approach 3
----
-two different ddev projects: one for gitlab and one for accounts.
-for this, is needed ddev start in both accounts and gitlab
-This is the approach that is close to a sucess, but in the end i got the error:
-```Could not authenticate you from OpenIDConnect because "Ssl connect returned=1 errno=0 peeraddr=192.168.16.6:443 state=error: certificate verify failed (unable to get local issuer certificate)". ``` 
-after being redirected from the login page (open gitlab -> login with accounts -> redirected to the drupal and logged in -> back to gitlab with the error).
+We could have added inside accounts folder the `docker-compose.override.yaml` named as `docker-compose.gitlab.yaml` and avoid having 2 DDEV projects, but I did not manage to have 2 urls working within the same DDEV project (one for the D10 in web and another one for the gitlab instance), as both need access to port 443.
 
