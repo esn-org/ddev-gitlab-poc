@@ -1,0 +1,112 @@
+{
+    "name": "esn/galaxy-accounts",
+    "type": "project",
+    "description": "Galaxy Accounts, the center of the galaxy",
+    "homepage": "https://accounts.esn.org",
+    "license": "GPL-2.0-or-later",
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://packages.drupal.org/8"
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "composer/installers": "^1.7",
+        "cweagans/composer-patches": "^1.6",
+        "drupal/admin_toolbar": "^3.4",
+        "drupal/big_pipe_sessionless": "^2.1",
+        "drupal/config_filter": "^2.2",
+        "drupal/config_split": "^2.0@RC",
+        "drupal/core-composer-scaffold": "^10.1",
+        "drupal/core-recommended": "^10.1",
+        "drupal/ctools": "^4.0",
+        "drupal/entity": "^1.4",
+        "drupal/gin": "^3.0@RC",
+        "drupal/gin_toolbar": "^1.0@RC",
+        "drupal/restui": "^1.20",
+        "drupal/simple_oauth": "^5.0.4",
+        "drush/drush": "^12.4",
+        "league/oauth2-server": "^8.4",
+        "league/uri": "6.7",
+        "oomphinc/composer-installers-extender": "^2.0",
+        "wikimedia/composer-merge-plugin": "^2"
+    },
+    "require-dev": {
+        "dealerdirect/phpcodesniffer-composer-installer": "^0.7.0",
+        "drupal/core-dev": "^10.1"
+    },
+    "conflict": {
+        "drupal/drupal": "*"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "component-dir": "web/libraries",
+        "sort-packages": true,
+        "allow-plugins": {
+            "composer/installers": true,
+            "cweagans/composer-patches": true,
+            "drupal/core-composer-scaffold": true,
+            "wikimedia/composer-merge-plugin": true,
+            "zaporylie/composer-drupal-optimizations": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "oomphinc/composer-installers-extender": true,
+            "phpstan/extension-installer": true,
+            "php-http/discovery": true
+        }
+    },
+    "extra": {
+        "composer-exit-on-patch-failure": true,
+        "drupal-scaffold": {
+            "locations": {
+                "web-root": "web/"
+            }
+        },
+        "installer-paths": {
+            "drush/Commands/contib/{$name}": [
+                "type:drupal-drush"
+            ],
+            "web/core": [
+                "type:drupal-core"
+            ],
+            "web/libraries/{$name}": [
+                "type:drupal-library"
+            ],
+            "web/modules/contrib/{$name}": [
+                "type:drupal-module"
+            ],
+            "web/modules/custom/{$name}": [
+                "type:drupal-custom-module"
+            ],
+            "web/profiles/contrib/{$name}": [
+                "type:drupal-profile"
+            ],
+            "web/theme/custom/{$name}": [
+                "type:drupal-custom-theme"
+            ],
+            "web/themes/contrib/{$name}": [
+                "type:drupal-theme"
+            ]
+        },
+        "merge-plugin": {
+            "include": [
+                "web/modules/custom/*/composer.json"
+            ],
+            "merge-extra": true,
+            "merge-extra-deep": true
+        },
+        "patchLevel": {
+            "drupal/restui": "-p1",
+            "drupal/simple_oauth": "-p1"
+        },
+        "patches": {
+            "drupal/restui": {
+                "3327681: Use ModuleHandlerInterface instead ModuleHandler": "https://www.drupal.org/files/issues/2023-01-09/restui-use-moduleHandlerInterface-3327681-04.patch"
+            },
+            "drupal/simple_oauth": {
+                "3173085: Login redirect sends incorrect HTTP headers": "https://www.drupal.org/files/issues/2023-05-24/simple_oauth-3173085-10.patch"
+            }
+        }
+    }
+}

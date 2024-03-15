@@ -1,0 +1,14 @@
+uuid: a84efdc6-899e-426e-b1c9-e13cd17d66e1
+langcode: en
+status: true
+dependencies:
+  config:
+    - rest.resource.userinfo_endpoint
+  module:
+    - rest
+id: oauth2_access_to_profile_information
+label: Oauth2
+weight: 4
+is_admin: null
+permissions:
+  - 'restful get userinfo_endpoint'

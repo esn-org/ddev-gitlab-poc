@@ -1,0 +1,18 @@
+uuid: ad6102ae-1ab8-48e4-ac83-01184b55c21b
+langcode: en
+status: true
+dependencies:
+  module:
+    - oauth_userinfo
+    - serialization
+    - simple_oauth
+id: userinfo_endpoint
+plugin_id: userinfo_endpoint
+granularity: resource
+configuration:
+  methods:
+    - GET
+  formats:
+    - json
+  authentication:
+    - oauth2

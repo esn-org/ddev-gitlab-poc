@@ -1,0 +1,4 @@
+services:
+  # Handles the user data for the endpoints.
+  oauth_userinfo.user_manager:
+    class: Drupal\oauth_userinfo\OauthUserManager

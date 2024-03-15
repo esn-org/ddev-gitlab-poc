@@ -1,8 +1,23 @@
 # ddev-gitlab-poc
 POC to have DDEV and gitlab up&amp;running
 
+The idea is to have a GITLAB instance running that is able to communicate with a DDEV project containing a Drupal 10 website that provides Oauth2/OpenID connect accounts; and those accounts are able to do login in the gitlab instance.
 
-The idea is to have a GITLAB instance running that is able to communicate with a DDEV project containing a Drupal 10 website that provides Oauth2/OpenID connect accounts; and those accounts are  able to do login in the gitlab instance.
+In the `oauth` folder we will find a DDEV Drupal10 project with basic contrib modules and a single custom one that provides a custom `userinfo` endpoint. All the necesary config is in the `config/sync` folder and it should be able to install from that folderir import its config from there.
+Oauth/openid is provided by simple_oauth + consumers, and the permissions for the endpoint should be ok if imported from config.
+
+You just need to create a new user (so it is not tested with admin) and a new consumer in `https://oauth.ddev.site/admin/config/services/consumer`:
+- redirect_url should be `https://gitlab.ddev.site/users/auth/openid_connect/callback` (for oauth)
+- scope: select Oauth2 from the list (if D10 not installed from accounts, you should create a role with the machine name `oauth2_access_to_profile_information` for the purpose of this testing)
+
+The consumer can be tested via postman with the following parameters:
+
+```
+redirect_uri: 'https://gitlab.ddev.site/users/auth/openid_connect/callback',
+userinfo_endpoint: "https://oauth.ddev.site/oauth/v1/userinfo",
+authorization_endpoint: "https://oauth.ddev.site/oauth/authorize",
+token_endpoint: "https://oauth.ddev.site/oauth/token"
+```
 
 
 So far, there are 3 approaches:

@@ -1,0 +1,10 @@
+# Package info
+name: Oauth Userinfo endpoint
+type: module
+description: Module that handles the endpoints that needs Oauth authentication
+core_version_requirement: ^9.5 || ^10
+package: Foo
+dependencies:
+  - drupal:field
+  - drupal:simple_oauth
+  - drupal:rest
