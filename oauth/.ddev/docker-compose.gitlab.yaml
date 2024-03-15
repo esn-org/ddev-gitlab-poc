@@ -25,9 +25,7 @@ services:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: $DDEV_APPROOT
     volumes:
-      - '/srv/gitlab/config:/etc/gitlab'
-      - '/srv/gitlab/logs:/var/log/gitlab'
-      - '/srv/gitlab/data:/var/opt/gitlab'
+      - './gitlab/etc/gitlab:/etc/gitlab'
       - ".:/mnt/ddev_config"
     shm_size: '256m'
     external_links:
