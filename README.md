@@ -42,6 +42,12 @@ and the rest of the services configured (maybe some are wrong or not needed).
 
 in addition, and before doing `ddev start`, you might need to create the gitlab folder: `sudo mkdir -p /srv/gitlab` as per (https://docs.gitlab.com/ee/install/docker.html#set-up-the-volumes-location). We dont use the environment variable $GITLAB_HOME inside the docker-compose image.
 
+we have also tried to copy the certificates found in .ddev/traefik/certs to the proper /srv/gitlab/config folder:
+- .ddev/traefik/certs/oauth.key|crt  to /srv/gitlab/config/trusted-certs/oauth.ddev.site.key|crt
+- .ddev/traefik/certs/gitlab.key|crt  to /srv/gitlab/config/ssl/gitlab.ddev.site.key|crt
+
+just in case it was a cert issue; reflecting also this in the gitlab.rb config.
+
 
 The `gitlab.rb` config used (file located in `/srv/gitlab/config/gitlab.rb or /etc/gitlab/gitlab.rb inside the container) is:
 ```
@@ -87,6 +93,22 @@ With everything, the error gotten is
 `Could not authenticate you from OpenIDConnect because "Ssl connect returned=1 errno=0 peeraddr=192.168.160.5:443 state=error: certificate verify failed (unable to get local issuer certificate)". ` 
 
 after clicking in the "OIC" button for login, being redirected to the OAUTH platform, login and granting the client and redirected back to gitlab.
+
+
+Doing `ddev ssh -s gitlab` on the DDEV gitlab project allow us to do ssh into the gitlab instance. From there, if we try `echo | /opt/gitlab/embedded/bin/openssl s_client -connect oauth.ddev.site:443` response but couple of errors such as:
+```
+CONNECTED(00000003)
+depth=0 O = mkcert development certificate, OU = esn@DESKTOP-DHJE3SK
+verify error:num=20:unable to get local issuer certificate
+verify return:1
+depth=0 O = mkcert development certificate, OU = esn@DESKTOP-DHJE3SK
+verify error:num=21:unable to verify the first certificate
+verify return:1
+depth=0 O = mkcert development certificate, OU = esn@DESKTOP-DHJE3SK
+verify return:1
+```
+
+
 
 
 
