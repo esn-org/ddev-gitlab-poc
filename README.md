@@ -90,6 +90,12 @@ gitlab_rails['omniauth_providers'] = [
 ]
 ```
 
+After any change done to the gitlab.rb file, gitlab needs to be reconfigured:
+```
+ddev ssh -s gitlab
+gitlab-ctl reconfigure
+```
+
 After ddev has started, you can test both platforms are running in https://oauth.ddev.site and https://gitlab.ddev.site.
 
 From gitlab then, we will try to log in using the existing drupal users:
