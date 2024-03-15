@@ -1,29 +1,41 @@
 # ddev-gitlab-poc
 POC to have DDEV and gitlab up&amp;running
 
-The idea is to have a GITLAB instance running that is able to communicate with a DDEV project containing a Drupal 10 website that provides Oauth2/OpenID connect accounts; and those accounts are able to do login in the gitlab instance.
+Given a existing Gitlab instance in https://<gitlab-url> and a existing Drupal10 site in https://<drupal-url>, we want to use those Drupal10 accounts to be able to log in the gitlab instance via the simple_oauth module that provides an OAUTH server. The existing production version of the D10 site is already capable to provide OAUTH login to a WIKI (confluence) or other D10 websites (that contains the openid_connect client module or cas).
 
-In the `oauth` folder we will find a DDEV Drupal10 project with basic contrib modules and a single custom one that provides a custom `userinfo` endpoint. All the necesary config is in the `config/sync` folder and it should be able to install from that folderir import its config from there.
-Oauth/openid is provided by simple_oauth + consumers, and the permissions for the endpoint should be ok if imported from config.
+This POC is to test in a localhost enviroment the integration between the D10 site and a localhost instance of Gitlab before doing the deploy in its respective production servers.
 
-You just need to create a new user (so it is not tested with admin) and a new consumer in `https://oauth.ddev.site/admin/config/services/consumer`:
-- redirect_url should be `https://gitlab.ddev.site/users/auth/openid_connect/callback` (for oauth)
-- scope: select Oauth2 from the list (if D10 not installed from accounts, you should create a role with the machine name `oauth2_access_to_profile_information` for the purpose of this testing)
+The D10 website runs locally on https://oauth.ddev.site.
+The gitlab instance runs locally on https://gitlab.ddev.site
 
-The consumer can be tested via postman with the following parameters:
 
+Inside this POC we are going to find:
+
+- This readme file.
+- Folder oauth: contains a DDEV project with a basic drupal10 and the needed modules; a dump of the DB in a sql format and the config folder is in sync with the database provided. Inside its .ddev folder we find the config.yaml and we also have a docker-compose.gitlab.yaml that should add a gitlab service to the project.
+The D10 contains all the contrib modules for oauth_server and a custom module to provide the REST endpoint `userinfo`.
+
+Before doing `ddev start`, you might need to create the folder were gitlab will be: `sudo mkdir -p /srv/gitlab` as per indicated in the gitlab documentation (https://docs.gitlab.com/ee/install/docker.html#set-up-the-volumes-location). Instructions state to use also the environment variable $GITLAB_HOME inside the docker-compose file, but we have just used the path folder instead directly.
+
+Running `ddev start` will create all the needed containers:
 ```
-redirect_uri: 'https://gitlab.ddev.site/users/auth/openid_connect/callback',
-userinfo_endpoint: "https://oauth.ddev.site/oauth/v1/userinfo",
-authorization_endpoint: "https://oauth.ddev.site/oauth/authorize",
-token_endpoint: "https://oauth.ddev.site/oauth/token"
+ Container ddev-oauth-web  Created
+ Container ddev-oauth-db  Created
+ Container ddev-oauth-gitlab  Created
+ Container ddev-oauth-web  Started
+ Container ddev-oauth-db  Started
+ Container ddev-oauth-gitlab  Started
 ```
 
-Inside the .ddev folder in `/oauth` we find the `docker-compose.external_links.yaml` to let ddev_router know about the second DDEV project.
+Once the containers are ready, the first time you can directly import the DB provided via drush (`drush sql-cli < oauth.sql`).
+If you import the database, you will have:
+- two users (admin/admin and u1/u1) 
+- 2 oauth2 clients already configured for oauth (one for oauth2 and another for openid), to be used by gitlab once it is running
+- needed roles
+- endpoints enabled and configured
 
 
-
-The second DDEV project (gitlab) located in the folder `gitlab` contains inside its .ddev folder a `docker-compose.override.yaml` that will create a gitlab instance with the following GITLAB_OMNIBUS_CONFIG (probably partially wrong):
+The `docker-compose.gitlab.yaml` file contains the initial GITLAB_OMNIBUS_CONFIG:
 
 ```
 external_url 'https://gitlab.ddev.site'
@@ -38,18 +50,8 @@ gitlab_rails['omniauth_block_auto_created_users'] = true
 nginx['ssl_certificate'] = "/etc/gitlab/ssl/gitlab.ddev.site.crt"
 nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/gitlab.ddev.site.key"
 ```
-and the rest of the services configured (maybe some are wrong or not needed).
 
-in addition, and before doing `ddev start`, you might need to create the gitlab folder: `sudo mkdir -p /srv/gitlab` as per (https://docs.gitlab.com/ee/install/docker.html#set-up-the-volumes-location). We dont use the environment variable $GITLAB_HOME inside the docker-compose image.
-
-we have also tried to copy the certificates found in .ddev/traefik/certs to the proper /srv/gitlab/config folder:
-- .ddev/traefik/certs/oauth.key|crt  to /srv/gitlab/config/trusted-certs/oauth.ddev.site.key|crt
-- .ddev/traefik/certs/gitlab.key|crt  to /srv/gitlab/config/ssl/gitlab.ddev.site.key|crt
-
-just in case it was a cert issue; reflecting also this in the gitlab.rb config.
-
-
-The `gitlab.rb` config used (file located in `/srv/gitlab/config/gitlab.rb or /etc/gitlab/gitlab.rb inside the container) is:
+The `gitlab.rb` config used (file located in `/srv/gitlab/config/gitlab.rb or /etc/gitlab/gitlab.rb inside the container) contains the same initial config and the credentials for login via the oauth server provided by drupal:
 ```
 external_url 'https://gitlab.ddev.site'
 nginx['redirect_http_to_https'] = false
@@ -88,11 +90,19 @@ gitlab_rails['omniauth_providers'] = [
 ]
 ```
 
+After ddev has started, you can test both platforms are running in https://oauth.ddev.site and https://gitlab.ddev.site.
 
-With everything, the error gotten is 
-`Could not authenticate you from OpenIDConnect because "Ssl connect returned=1 errno=0 peeraddr=192.168.160.5:443 state=error: certificate verify failed (unable to get local issuer certificate)". ` 
+From gitlab then, we will try to log in using the existing drupal users:
+- Go to https://gitlab.ddev.site
+- click on the OIC button below 'or sign in with'
+- you are redirected to https://oauth.ddev.site login page
+- use `u1` as username and password (if you have imported the DB provided)
+- grant access to the client
+- you will be redirected to gitlab now. Here you should be logged in, but we got the following error:
 
-after clicking in the "OIC" button for login, being redirected to the OAUTH platform, login and granting the client and redirected back to gitlab.
+```
+Could not authenticate you from OpenIDConnect because "Ssl connect returned=1 errno=0 peeraddr=<local_ip>:443 state=error: certificate verify failed (unable to get local issuer certificate)".
+``` 
 
 
 Doing `ddev ssh -s gitlab` on the DDEV gitlab project allow us to do ssh into the gitlab instance. From there, if we try `echo | /opt/gitlab/embedded/bin/openssl s_client -connect oauth.ddev.site:443` response but couple of errors such as:
@@ -107,13 +117,3 @@ verify return:1
 depth=0 O = mkcert development certificate, OU = esn@DESKTOP-DHJE3SK
 verify return:1
 ```
-
-
-
-
-
-Variation 1
----
-
-We could have added inside accounts folder the `docker-compose.override.yaml` named as `docker-compose.gitlab.yaml` and avoid having 2 DDEV projects, but I did not manage to have 2 urls working within the same DDEV project (one for the D10 in web and another one for the gitlab instance), as both need access to port 443.
-
