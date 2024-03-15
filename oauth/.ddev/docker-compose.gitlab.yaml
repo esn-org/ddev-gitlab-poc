@@ -2,6 +2,9 @@ services:
   gitlab:
     container_name: ddev-${DDEV_SITENAME}-gitlab
     image: gitlab/gitlab-ee:16.9.2-ee.0
+    build:
+      context: './gitlab/docker'
+
     restart: always
     environment:
       VIRTUAL_HOST: gitlab.ddev.site
