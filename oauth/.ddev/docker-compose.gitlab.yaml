@@ -1,4 +1,3 @@
-#ddev-generated
 services:
   gitlab:
     container_name: ddev-${DDEV_SITENAME}-gitlab
@@ -6,8 +5,8 @@ services:
     restart: always
     environment:
       VIRTUAL_HOST: gitlab.ddev.site
-      HTTP_EXPOSE: 8080:80,8085:8025
-      HTTPS_EXPOSE: 8443:80,8086:8025
+      HTTP_EXPOSE: 80:80,8025:8025
+      HTTPS_EXPOSE: 443:80,8026:8025
       GITLAB_OMNIBUS_CONFIG: |
         # Add any other gitlab.rb configuration here, each on its own line
         external_url 'https://gitlab.ddev.site'
