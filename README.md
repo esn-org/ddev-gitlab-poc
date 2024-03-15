@@ -104,6 +104,11 @@ From gitlab then, we will try to log in using the existing drupal users:
 Could not authenticate you from OpenIDConnect because "Ssl connect returned=1 errno=0 peeraddr=<local_ip>:443 state=error: certificate verify failed (unable to get local issuer certificate)".
 ``` 
 
+We have also tried to copy the certificates found in .ddev/traefik/certs to the proper /srv/gitlab/config folder:
+- .ddev/traefik/certs/oauth.key|crt  to /srv/gitlab/config/trusted-certs/oauth.ddev.site.key|crt
+- .ddev/traefik/certs/gitlab.key|crt  to /srv/gitlab/config/ssl/gitlab.ddev.site.key|crt
+just to see if that solves the error, but it seems it does not.
+
 
 Doing `ddev ssh -s gitlab` on the DDEV gitlab project allow us to do ssh into the gitlab instance. From there, if we try `echo | /opt/gitlab/embedded/bin/openssl s_client -connect oauth.ddev.site:443` response but couple of errors such as:
 ```
