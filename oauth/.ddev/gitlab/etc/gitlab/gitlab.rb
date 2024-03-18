@@ -57,24 +57,22 @@ letsencrypt['enable'] = false
 nginx['listen_port'] = 80
 nginx['listen_https'] = false
 nginx['ssl_verify_client'] = "off"
-nginx['ssl_client_certificate'] = "/etc/gitlab/ssl/ca.crt"
-gitlab_rails['omniauth_allow_single_sign_on'] = ['openid_connect']
-gitlab_rails['omniauth_auto_link_ldap_user'] = true
-gitlab_rails['omniauth_block_auto_created_users'] = true
-nginx['ssl_certificate'] = "/etc/gitlab/ssl/gitlab.ddev.site.crt"
-nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/gitlab.ddev.site.key"
+gitlab_rails['omniauth_allow_single_sign_on'] = ['openid_connect', 'oauth2_generic']
+gitlab_rails['omniauth_auto_link_ldap_user'] = false
+gitlab_rails['omniauth_block_auto_created_users'] = false
+gitlab_rails['initial_root_password'] = 'q0w9e8r7t6y5'
 gitlab_rails['omniauth_providers'] = [
   {
     name: "openid_connect",
     label: "OIC",
     args: {
       name: 'openid_connect',
-      scope: ['oauth2_access_to_profile_information'],
+      scope: ['openid', 'oauth2_access_to_profile_information'],
       response_type: 'code',
       issuer: 'https://oauth.ddev.site',
       discovery: false,
+      uid_field: 'preferred_username',
       client_auth_method: 'basic',
-      uid_field: "preferred_username",
       client_options: {
         identifier: 'gitlab',
         secret: 'gitlab',
@@ -84,37 +82,35 @@ gitlab_rails['omniauth_providers'] = [
         token_endpoint: "https://oauth.ddev.site/oauth/token"
       }
     }
+  },
+  {
+    name: "oauth2_generic",
+    label: "OAUTH",
+    app_id: "git",
+    app_secret: "git",
+    args: {
+      gitlab_username_claim: 'preferred_username',
+      client_options: {
+        site: "https://oauth.ddev.site",
+        user_info_url: "/oauth/v1/userinfo",
+        authorize_url: "/oauth/authorize",
+        token_url: "/oauth/token"
+      },
+      user_response_structure: {
+        root_path: [],
+        id_path: ["sub"],
+        attributes: {
+          email: "email",
+          name: "name"
+        }
+      },
+      authorize_params: {
+        scope: "oauth2_access_to_profile_information"
+      },
+      strategy_class: "OmniAuth::Strategies::OAuth2Generic"
+    }
   }
 ]
-
-# gitlab_rails['omniauth_providers'] = [
-#  {
-#    name: "oauth2_generic",
-#    label: "OAUTH",
-#    app_id: "git",
-#    app_secret: "git",
-#    args: {
-#      client_options: {
-#        site: "https://oauth.ddev.site",
-#        user_info_url: "/oauth/v1/userinfo",
-#        authorize_url: "/oauth/authorize",
-#        token_url: "/oauth/token"
-#      },
-#      user_response_structure: {
-#        root_path: [],
-#        id_path: ["sub"],
-#        attributes: {
-#          email: "email",
-#          name: "name"
-#        }
-#      },
-#      authorize_params: {
-#        scope: "oauth2_access_to_profile_information"
-#      },
-#      strategy_class: "OmniAuth::Strategies::OAuth2Generic"
-#    }
-#  }
-# ]
 
 
 ################################################################################

@@ -1,29 +1,16 @@
 services:
   gitlab:
+    environment:
+      VIRTUAL_HOST: gitlab.ddev.site
+      HTTP_EXPOSE: 80:80,8025:8025
+      HTTPS_EXPOSE: 443:80,8026:8025
+
     container_name: ddev-${DDEV_SITENAME}-gitlab
     image: gitlab/gitlab-ee:16.9.2-ee.0
     build:
       context: './gitlab/docker'
 
     restart: always
-    environment:
-      VIRTUAL_HOST: gitlab.ddev.site
-      HTTP_EXPOSE: 80:80,8025:8025
-      HTTPS_EXPOSE: 443:80,8026:8025
-      GITLAB_OMNIBUS_CONFIG: |
-        # Add any other gitlab.rb configuration here, each on its own line
-        external_url 'https://gitlab.ddev.site'
-        nginx['redirect_http_to_https'] = false
-        letsencrypt['enable'] = false
-        nginx['listen_port'] = 80
-        nginx['listen_https'] = false
-        nginx['ssl_verify_client'] = "off"
-        gitlab_rails['omniauth_allow_single_sign_on'] = ['openid_connect']
-        gitlab_rails['omniauth_auto_link_ldap_user'] = true
-        gitlab_rails['omniauth_block_auto_created_users'] = true
-        nginx['ssl_client_certificate'] = "/etc/gitlab/ssl/ca.crt"
-        nginx['ssl_certificate'] = "/etc/gitlab/ssl/gitlab.ddev.site.crt"
-        nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/gitlab.ddev.site.key"
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: $DDEV_APPROOT
@@ -34,10 +21,13 @@ services:
     external_links:
       - "ddev-router:oauth.ddev.site"
 
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail -s gitlab.ddev.site"]
+      timeout: 180s
+
   web:
     external_links:
       - "ddev-router:gitlab.ddev.site"
 
 volumes:
   gitlab:
-

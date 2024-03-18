@@ -1,0 +1,2 @@
+# Ignore any other file that is not created by us.
+/etc/gitlab
