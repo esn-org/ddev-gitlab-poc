@@ -1,8 +1,10 @@
-#ddev-generated
 services:
   gitlab:
     container_name: ddev-${DDEV_SITENAME}-gitlab
     image: gitlab/gitlab-ee:16.9.2-ee.0
+    build:
+      context: './gitlab/docker'
+
     restart: always
     environment:
       VIRTUAL_HOST: gitlab.ddev.site
@@ -26,13 +28,16 @@ services:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: $DDEV_APPROOT
     volumes:
-      - '/srv/gitlab/config:/etc/gitlab'
-      - '/srv/gitlab/logs:/var/log/gitlab'
-      - '/srv/gitlab/data:/var/opt/gitlab'
+      - './gitlab/etc/gitlab:/etc/gitlab'
       - ".:/mnt/ddev_config"
     shm_size: '256m'
     external_links:
       - "ddev-router:oauth.ddev.site"
 
+  web:
+    external_links:
+      - "ddev-router:gitlab.ddev.site"
+
 volumes:
   gitlab:
+

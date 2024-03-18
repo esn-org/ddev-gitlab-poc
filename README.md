@@ -1,7 +1,7 @@
 # ddev-gitlab-poc
 POC to have DDEV and gitlab up&amp;running
 
-Given a existing Gitlab instance in https://<gitlab-url> and a existing Drupal10 site in https://<drupal-url>, we want to use those Drupal10 accounts to be able to log in the gitlab instance via the simple_oauth module that provides an OAUTH server. The existing production version of the D10 site is already capable to provide OAUTH login to a WIKI (confluence) or other D10 websites (that contains the openid_connect client module or cas).
+Given a existing Gitlab instance in `https://<gitlab-url>` and a existing Drupal10 site in `https://<drupal-url>`, we want to use those Drupal10 accounts to be able to log in the gitlab instance via the simple_oauth module that provides an OAUTH server. The existing production version of the D10 site is already capable to provide OAUTH login to a WIKI (confluence) or other D10 websites (that contains the openid_connect client module or cas).
 
 This POC is to test in a localhost enviroment the integration between the D10 site and a localhost instance of Gitlab before doing the deploy in its respective production servers.
 
@@ -15,6 +15,8 @@ Inside this POC we are going to find:
 - Folder oauth: contains a DDEV project with a basic drupal10 and the needed modules; a dump of the DB in a sql format and the config folder is in sync with the database provided. Inside its .ddev folder we find the config.yaml and we also have a docker-compose.gitlab.yaml that should add a gitlab service to the project.
 The D10 contains all the contrib modules for oauth_server and a custom module to provide the REST endpoint `userinfo`.
 
+- `ddev composer install` is required
+
 Before doing `ddev start`, you might need to create the folder were gitlab will be: `sudo mkdir -p /srv/gitlab` as per indicated in the gitlab documentation (https://docs.gitlab.com/ee/install/docker.html#set-up-the-volumes-location). Instructions state to use also the environment variable $GITLAB_HOME inside the docker-compose file, but we have just used the path folder instead directly.
 
 Running `ddev start` will create all the needed containers:
@@ -27,7 +29,7 @@ Running `ddev start` will create all the needed containers:
  Container ddev-oauth-gitlab  Started
 ```
 
-Once the containers are ready, the first time you can directly import the DB provided via drush (`drush sql-cli < oauth.sql`).
+Once the containers are ready, the first time you can directly import the DB provided via drush (`ddev import-db --file=oauth.sql`).
 If you import the database, you will have:
 - two users (admin/admin and u1/u1) 
 - 2 oauth2 clients already configured for oauth (one for oauth2 and another for openid), to be used by gitlab once it is running

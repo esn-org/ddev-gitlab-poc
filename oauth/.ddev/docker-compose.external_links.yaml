@@ -1,5 +1,0 @@
-version: '3.6'
-services:
-  web:
-    external_links:
-    - "ddev-router:gitlab.ddev.site"
