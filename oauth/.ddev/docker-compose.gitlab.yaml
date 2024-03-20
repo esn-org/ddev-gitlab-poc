@@ -7,9 +7,6 @@ services:
 
     container_name: ddev-${DDEV_SITENAME}-gitlab
     image: gitlab/gitlab-ce:16.9.2-ce.0
-    build:
-      context: './gitlab/docker'
-
     restart: always
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
