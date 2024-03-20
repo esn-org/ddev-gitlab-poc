@@ -16,7 +16,6 @@ composer_version: "2"
 web_environment: []
 hooks:
     pre-start:
-        - exec-host: mkdir -p "${DDEV_APPROOT}/.ddev/gitlab/etc/gitlab/trusted-certs"
         - exec-host: cp "$(mkcert -CAROOT)"/rootCA.pem "${DDEV_APPROOT}/.ddev/gitlab/etc/gitlab/trusted-certs/rootCA.crt"
 
 # Key features of DDEV's config.yaml:
